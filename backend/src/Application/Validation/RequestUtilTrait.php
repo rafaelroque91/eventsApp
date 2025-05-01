@@ -1,0 +1,115 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Application\Validation;
+
+use App\Application\DTO\RequestDTOInterface;
+use App\Infrastructure\Http\ApiException;
+
+trait RequestUtilTrait
+{
+    const int OPTION_FIELD_REQUIRED = 0;
+    const int OPTION_FIELD_TYPE = 1;
+    public function validate(array $rules, string $requestDTOInterfaceDto) : RequestDTOInterface
+    {
+
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->jsonInvalidRequestResponse(['request' => json_last_error_msg()]);
+        }
+
+        if (!is_subclass_of($requestDTOInterfaceDto, RequestDTOInterface::class)) {
+            throw new \LogicException("Dto Class invalid");
+        }
+
+        $validated = [];
+        $errors = [];
+
+        foreach ($rules as $field => $options) {
+
+            $fieldValue = $input[$field] ?? null;
+
+            if ($options[self::OPTION_FIELD_REQUIRED] === 'required' && empty($fieldValue)) {
+                $errors[] = [$field => "The field is required."];
+            }
+
+            if (empty($fieldValue)) {
+                continue;
+            }
+
+            if ($options[self::OPTION_FIELD_TYPE] == 'date') {
+                try {
+                    $value = \DateTimeImmutable::createFromFormat('Y-m-d', $fieldValue);
+
+                    if ($value === false) {
+                        $errors[] = [$field => "The field is invalid. Use YYYY-MM-DD format."];
+                        continue;
+                    }
+                    $validated[$field] = $value;
+                } catch (\Exception) {
+                    $errors[] = [$field => "The field is invalid. Use YYYY-MM-DD format."];
+                }
+            }
+
+            if ($options[self::OPTION_FIELD_TYPE] == 'string') {
+                $validated[$field] = $fieldValue;
+            }
+
+            //todo add to other types
+        }
+
+        if (count($errors) > 0) {
+            $this->jsonInvalidRequestResponse($errors);
+        }
+
+
+        return $requestDTOInterfaceDto::createFromRequestData($validated);
+    }
+
+    private function jsonResponseCreated(mixed $data): string
+    {
+        return $this->jsonResponse($data, 201);
+    }
+
+    private function jsonResponse(mixed $data, int $statusCode = 200): string
+    {
+        http_response_code($statusCode);
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit;
+    }
+
+    /** Send a JSON error response */
+    private function jsonInvalidRequestResponse(array $errors): string
+    {
+        return $this->jsonResponse([
+            "message" => "There are some validation errors",
+            'errors' => $errors], 422);
+    }
+
+    private function jsonErrorResponse(\Exception $e, ?string $friendlyMessage = null, int $code = 500): string
+    {
+        return $this->jsonResponse(
+            [
+                "message" => $friendlyMessage,
+                "errors" => [$e->getMessage()],
+                "trace" => APP_DEBUG ? $e->getTraceAsString() : null,
+            ],
+            $code);
+    }
+
+    private function handleWithExceptionHandling(callable $callback): string
+    {
+        try {
+            return $callback();
+        } catch (\InvalidArgumentException $e) {
+            return $this->jsonErrorResponse($e->getMessage(), 422);
+        } catch (ApiException $e) {
+            return $this->jsonErrorResponse("Failed to save event: " . $e->getMessage(), $e->getCode() ?: 500);
+        } catch (\Throwable $e) {
+            return $this->jsonErrorResponse("An unexpected error occurred3: " . $e->getMessage() . '-' . $e->getTraceAsString(), 500);
+        }
+    }
+}
