@@ -81,6 +81,14 @@ trait RequestUtilTrait
         exit;
     }
 
+    private function jsonResponseNotFound(string $message): string
+    {
+        return $this->jsonResponse([
+                "message" => $message,
+            ], 404);
+
+    }
+
     /** Send a JSON error response */
     private function jsonInvalidRequestResponse(array $errors): string
     {
