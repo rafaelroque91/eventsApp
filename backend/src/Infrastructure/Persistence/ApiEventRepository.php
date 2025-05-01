@@ -22,11 +22,23 @@ class ApiEventRepository implements EventRepositoryInterface
     public function findAll(QueryParamsDTO $params): array
     {
         try {
-            return $this->apiClient->get(API_ENDPOINT_EVENTS);
+            return $this->apiClient->get($this->buildUrlWithParams(API_ENDPOINT_EVENTS, $params), $params);
         } catch (ApiException $e) {
             error_log("Failed to fetch events: " . $e->getMessage());
             throw new ApiException("An unexpected error occurred while fetching events.", 0, $e);
         }
+    }
+
+    private function buildUrlWithParams(string $url, QueryParamsDTO $params) : string
+    {
+        $query = http_build_query([
+            '$top' => API_PAGE_SIZE,
+            '$skip' => ($params->page - 1) * API_PAGE_SIZE,
+            '$filter' => $params->filter,
+            '$orderBy' => $params->orderBy,
+        ]);
+
+        return $url . '?' . $query;
     }
 
     public function findById(string $id): ?Event
