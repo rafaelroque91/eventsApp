@@ -4,24 +4,18 @@ declare(strict_types=1);
 
 namespace App\Application\Query;
 
+use App\Application\DTO\QueryParamsDTO;
 use App\Repository\EventRepositoryInterface;
 
 class ListEventsHandler
 {
-    private EventRepositoryInterface $eventRepository;
-
-    public function __construct(EventRepositoryInterface $eventRepository)
+    public function __construct(
+        private readonly EventRepositoryInterface $eventRepository)
     {
-        $this->eventRepository = $eventRepository;
     }
 
-    /**
-     * @return \App\Domain\Entity\Event[]
-     * @throws \App\Infrastructure\Http\ApiException
-     */
-    public function handle(): array
+    public function handle(QueryParamsDTO $params): array
     {
-        //todo Add pagination
-        return $this->eventRepository->findAll();
+        return $this->eventRepository->findAll($params);
     }
 }

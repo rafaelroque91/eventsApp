@@ -12,6 +12,7 @@
     "php": ">=8.3",
     "ext-redis": "*",
     "guzzlehttp/guzzle": "^7.5",
+    "nesbot/carbon": "^3.9",
     "psr/container": "^2.0"
   },
   "config": {

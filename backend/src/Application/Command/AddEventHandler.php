@@ -7,18 +7,12 @@ namespace App\Application\Command;
 use App\Application\DTO\EventDTO;
 use App\Domain\Entity\Event;
 use App\Repository\EventRepositoryInterface;
-use DateTimeImmutable;
-
-// Optional: Define a Command object/DTO for better structure
-// class AddEventCommand { public function __construct(public string $title, ...) {} }
 
 class AddEventHandler
 {
-    private EventRepositoryInterface $eventRepository;
-
-    public function __construct(EventRepositoryInterface $eventRepository)
+    public function __construct(
+        private readonly EventRepositoryInterface $eventRepository)
     {
-        $this->eventRepository = $eventRepository;
     }
 
     public function handle(

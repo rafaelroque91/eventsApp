@@ -74,11 +74,11 @@ class DependencyInjectionFactory
         $container->singleton(ApiEventRepository::class, function(Container $c) {
             return new ApiEventRepository($c->get(ApiClient::class));
         });
-//
+
         $container->bind(EventRepositoryInterface::class, function(Container $c) {
             return new ApiEventRepository($c->get(ApiEventRepository::class));
         });
-//
+
         $container->bind(ListEventsHandler::class, function(Container $c) {
             return new ListEventsHandler($c->get(ApiEventRepository::class));
         });

@@ -22,49 +22,33 @@ class EventController
         private readonly GetEventDetailsHandler $getEventDetailsHandler,
         private readonly AddEventHandler $addEventHandler
     ) {
-//        $this->listEventsHandler = $listEventsHandler;
-//        $this->getEventDetailsHandler = $getEventDetailsHandler;
-//        $this->addEventHandler = $addEventHandler;
     }
 
-    // Renders the main page which will likely contain the Vue app
-//    public function index(): void
-//    {
-//        // This page will load Vue, which will then call listApi()
-//        $this->render('events/index');
-//    }
-
-    public function listApi(): void
+    public function list(): void
     {
         try {
+            $params = $this->getQueryParams($_GET);
 
-//exemplo de filtro
-//            https://interview.civicplus.com/cc949ee3-beb0-4573-9878-2fa5af34bad2/api/Events?$top=2&$skip=2&$filter=title eq 'test 122'&$orderBy=title
-            $events = $this->listEventsHandler->handle(); // Assuming this returns array<Event>
-//            var_dump($events);
-//            exit;
+            $events = $this->listEventsHandler->handle($params);
 
-            // Use the resource to transform the collection
-            $eventData = EventResource::collection($events);
+            $responseData = EventResource::collection($events,$params);
 
-//            $this->jsonResponse($eventData);
-//
-//            $events = $this->listEventsHandler->handle();
-//            // Convert events to a simple array format suitable for JSON
-//            $eventData = array_map(fn($event) => [
-//                'id' => $event->id,
-//                'eventTitle' => $event->eventTitle,
-//                'description' => $event->description, // Keep description short for list view?
-//                'startDate' => $event->startDate->format(\DateTimeInterface::ISO8601), // Consistent format
-//                'endDate' => $event->endDate->format(\DateTimeInterface::ISO8601),
-//            ], $events);
-            $this->jsonResponse($eventData);
+            //todo criar um resource para padronizar os erros
+            $this->jsonResponse($responseData);
+
         } catch (ApiException $e) {
-            $this->jsonErrorResponse("Failed to fetch events: " . $e->getMessage(), $e->getCode() ?: 500);
+            var_dump('exception1',$e->getMessage()  . $e->getTraceAsString());
+            exit;
+            // Log o erro se necessário
+            error_log("API Error fetching events: " . $e->getMessage());
+            $this->jsonErrorResponse($e, "An unexpected error occurred while fetching events");
         } catch (\Throwable $e) {
-            var_dump($e->getMessage()  . '-' . $e->getTraceAsString());
-            $this->jsonErrorResponse("An unexpected error occurred: " . $e->getMessage());
-        }
+            var_dump('exception2',$e->getMessage() . $e->getTraceAsString());
+            exit;
+            // Log o erro se necessário
+            error_log("API Error fetching events: " . $e->getMessage());
+            $this->jsonErrorResponse($e, "An unexpected error occurred while fetching events");
+}
     }
 
     public function store(): string
@@ -90,11 +74,11 @@ class EventController
 //            exit;
             return $this->jsonErrorResponse($e, null,422);
         } catch (ApiException $e) {
-            return $this->jsonErrorResponse("Failed to save event: " . $e->getMessage(), $e->getCode() ?: 500);
+            return $this->jsonErrorResponse($e, "Failed to save event: ");
         } catch (\Throwable $e) {
             //todo add a debug flag on config. if true, show the trace.
+            return $this->jsonErrorResponse($e, "Failed to save event: ");
             //check the APP_DEBUG  flag created
-            return $this->jsonErrorResponse("An unexpected error occurred2: " . $e->getMessage() . '-' . $e->getTraceAsString(), 500);
         }
     }
 
@@ -111,10 +95,11 @@ class EventController
             return $this->jsonResponse($eventData);
 
         } catch (ApiException $e) {
-            $this->jsonErrorResponse("Failed to fetch events: " . $e->getMessage(), $e->getCode() ?: 500);
+            $this->jsonErrorResponse($e, "Failed to fetch events");
         } catch (\Throwable $e) {
             var_dump($e->getMessage()  . '-' . $e->getTraceAsString());
-            $this->jsonErrorResponse("An unexpected error occurred: " . $e->getMessage());
+
+            $this->jsonErrorResponse($e, "Failed to fetch events");
         }
     }
 }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Application\Validation;
 
+use App\Application\DTO\QueryParamsDTO;
 use App\Application\DTO\RequestDTOInterface;
-use App\Infrastructure\Http\ApiException;
 
 trait RequestUtilTrait
 {
@@ -13,7 +13,6 @@ trait RequestUtilTrait
     const int OPTION_FIELD_TYPE = 1;
     public function validate(array $rules, string $requestDTOInterfaceDto) : RequestDTOInterface
     {
-
         $input = json_decode(file_get_contents('php://input'), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
@@ -68,11 +67,17 @@ trait RequestUtilTrait
         return $requestDTOInterfaceDto::createFromRequestData($validated);
     }
 
+    private function getQueryParams(array $params) : QueryParamsDTO
+    {
+        return QueryParamsDTO::createFromRequest($params);
+    }
+
     private function jsonResponseCreated(mixed $data): string
     {
         return $this->jsonResponse($data, 201);
     }
 
+    //todo fix the return types
     private function jsonResponse(mixed $data, int $statusCode = 200): string
     {
         http_response_code($statusCode);
@@ -89,7 +94,6 @@ trait RequestUtilTrait
 
     }
 
-    /** Send a JSON error response */
     private function jsonInvalidRequestResponse(array $errors): string
     {
         return $this->jsonResponse([
@@ -99,6 +103,8 @@ trait RequestUtilTrait
 
     private function jsonErrorResponse(\Exception $e, ?string $friendlyMessage = null, int $code = 500): string
     {
+        error_log($e->getMessage() . "\n" . $e->getTraceAsString());
+
         return $this->jsonResponse(
             [
                 "message" => $friendlyMessage,
@@ -106,18 +112,5 @@ trait RequestUtilTrait
                 "trace" => APP_DEBUG ? $e->getTraceAsString() : null,
             ],
             $code);
-    }
-
-    private function handleWithExceptionHandling(callable $callback): string
-    {
-        try {
-            return $callback();
-        } catch (\InvalidArgumentException $e) {
-            return $this->jsonErrorResponse($e->getMessage(), 422);
-        } catch (ApiException $e) {
-            return $this->jsonErrorResponse("Failed to save event: " . $e->getMessage(), $e->getCode() ?: 500);
-        } catch (\Throwable $e) {
-            return $this->jsonErrorResponse("An unexpected error occurred3: " . $e->getMessage() . '-' . $e->getTraceAsString(), 500);
-        }
     }
 }

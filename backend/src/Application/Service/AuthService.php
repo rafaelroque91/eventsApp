@@ -4,36 +4,24 @@ declare(strict_types=1);
 
 namespace App\Application\Service;
 
-use App\Application\Auth\DTO\TokenDto;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Http\Message\ResponseInterface;
+use App\Infrastructure\Http\ApiException;
 
 class AuthService
 {
-    private ClientInterface $httpClient;
-    private TokenCacheInterface $tokenCache;
-    private string $authUrl;
-    private string $clientId;
-    private string $clientSecret;
-
     public function __construct(
-        ClientInterface $httpClient,
-        TokenCacheInterface $tokenCache,
-        string $authUrl,
-        string $clientId,
-        string $clientSecret
+        private readonly ClientInterface $httpClient,
+        private readonly TokenCacheInterface $tokenCache,
+        private readonly string $authUrl,
+        private readonly string $clientId,
+        private readonly string $clientSecret
     ) {
-        $this->httpClient = $httpClient;
-        $this->tokenCache = $tokenCache;
-        $this->authUrl = $authUrl;
-        $this->clientId = $clientId;
-        $this->clientSecret = $clientSecret;
     }
 
     public function getBearerToken(): string
     {
-        //check redis
         $cachedToken = $this->tokenCache->getToken();
         if ($cachedToken !== null) {
             return $cachedToken;
@@ -66,12 +54,12 @@ class AuthService
             if ($e->hasResponse()) {
                 $message .= " | Response: " . $e->getResponse()->getBody();
             }
-            error_log($message); // Log the error
-            // Wrap Guzzle exception in a domain/application specific one
-            throw new \App\Infrastructure\Http\ApiException("Authentication failed. Could not retrieve API token.", $e->getCode(), $e);
+
+            error_log($message);
+            throw new ApiException("Authentication failed. Could not retrieve API token.", $e->getCode(), $e);
         } catch (\Throwable $e) {
             error_log("Error processing auth response: " . $e->getMessage());
-            throw new \App\Infrastructure\Http\ApiException("Error processing authentication response.", $e->getCode(), $e);
+            throw new ApiException("Error processing authentication response.", $e->getCode(), $e);
         }
     }
 

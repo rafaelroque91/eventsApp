@@ -15,20 +15,8 @@ class Event
         public readonly DateTimeImmutable $startDate,
         public readonly DateTimeImmutable $endDate
     ) {
-        // Basic validation could go here, or in a factory/builder
-//        if (empty(trim($title))) {
-//            throw new \InvalidArgumentException("Event title cannot be empty.");
-//        }
-//
-//        if ($startDate == null || $endDate == null)  {
-//            throw new \InvalidArgumentException("End Date cannot be empty.");
-//        }
-//        if ($endDate < $startDate) {
-//            throw new \InvalidArgumentException("End date cannot be before start date.");
-//        }
     }
 
-    // Static factory method for creating from API data array
     public static function fromArray(array $data): self
     {
         try {
@@ -49,7 +37,6 @@ class Event
         }
     }
 
-    // Method to convert entity to array suitable for API POST/PUT
     public function toApiPayload(): array
     {
         return [

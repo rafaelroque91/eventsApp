@@ -19,7 +19,7 @@ class EventDTO implements RequestDTOInterface
     {
         return new self(
             $data['title'],
-            $data['description'] ?? null, // Use null coalescing for optional fields
+            $data['description'] ?? null,
             $data['startDate'] ?? null,
             $data['endDate'] ?? null
         );

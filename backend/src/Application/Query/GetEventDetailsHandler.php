@@ -9,16 +9,10 @@ use App\Repository\EventRepositoryInterface;
 
 class GetEventDetailsHandler
 {
-    private EventRepositoryInterface $eventRepository;
+    public function __construct(
+        private readonly EventRepositoryInterface $eventRepository)
+    {}
 
-    public function __construct(EventRepositoryInterface $eventRepository)
-    {
-        $this->eventRepository = $eventRepository;
-    }
-
-    /**
-     * @throws \App\Infrastructure\Http\ApiException
-     */
     public function handle(string $eventId): ?Event
     {
         return $this->eventRepository->findById($eventId);

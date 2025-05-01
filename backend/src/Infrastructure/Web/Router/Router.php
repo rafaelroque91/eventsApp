@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Web\Router;
 
+use App\Application\Validation\RequestUtilTrait;
 use App\Infrastructure\DI\Container;
 use LogicException;
+use Psr\Container\NotFoundExceptionInterface;
+use Psr\Container\ContainerExceptionInterface;
 
-
-//todo move later
-class RouteNotFoundException extends \Exception {}
 
 class Router
 {
+    use RequestUtilTrait;
     private array $routes = [];
 
-    // Add constructor injection for the Container
     public function __construct(
         private readonly Container $container)
     {}
@@ -35,35 +35,30 @@ class Router
 
     public function callRoute(string $method, string $uri): void
     {
-        //separate uri from query string
-        $uri = parse_url($uri, PHP_URL_PATH) ? : '/';
-        //eu acho q nao precisa
-//        $queryString = parse_url($uri, PHP_URL_QUERY) ?: '';
+        try {
+            $uri = parse_url($uri, PHP_URL_PATH) ?: '/';
 
-        // Check if any routes are defined for this method
-//        if (!isset($this->routes[$method])) {
-//            throw new RouteNotFoundException("No routes defined for method {$method}");
-//        }
+            foreach ($this->routes[$method] as $pathRegex => $callable) {
+                if (preg_match('#^' . $pathRegex . '$#', $uri, $matches)) {
+                    array_shift($matches); //get the route parameter (if exists)
 
-        foreach ($this->routes[$method] as $pathRegex => $callable) {
-            if (preg_match('#^' . $pathRegex . '$#', $uri, $matches)) {
-                array_shift($matches); //get the route parameter (if exists)
-
-                $this->dispatchControllerFunction($callable[0],$callable[1], $matches);
-                return;
+                    $this->dispatchControllerFunction($callable[0], $callable[1], $matches);
+                    return;
+                }
             }
-        }
 
-        throw new RouteNotFoundException("No route found for {$method} {$uri}");
+            $this->jsonResponseNotFound("No route found for {$method} {$uri}");
+
+        } catch (\Throwable $e) {
+            $this->jsonErrorResponse($e);
+        }
     }
 
     private function dispatchControllerFunction(string $controller, string $method, mixed $param) : void
     {
         try {
             $controllerInstance = $this->container->get($controller);
-        } catch (\Psr\Container\NotFoundExceptionInterface | \Psr\Container\ContainerExceptionInterface $e) {
-            // Catch container-specific exceptions during resolution
-            error_log("DI Container error resolving {$controller}: " . $e->getMessage());
+        } catch (NotFoundExceptionInterface | ContainerExceptionInterface $e) {
             throw new LogicException("Could not create controller '{$controller}'. Check container configuration and dependencies.", 0, $e);
         }
 
