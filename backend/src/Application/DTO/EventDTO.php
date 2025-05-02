@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Application\DTO;
 
-use DateTimeImmutable;
+use Carbon\Carbon;
 
 class EventDTO implements RequestDTOInterface
 {
     public function __construct(
         public string $title,
         public ?string $description,
-        public ?DateTimeImmutable $startDate,
-        public ?DateTimeImmutable $endDate
+        public ?Carbon $startDate,
+        public ?Carbon $endDate
     ) {}
     
     public static function createFromRequestData(array $data): self

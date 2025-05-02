@@ -35,7 +35,7 @@ class AuthService
                 ],
                 'headers' => [
                     'Accept' => 'application/json',
-                    'Content-Type' => 'application/json', // Common for OAuth
+                    'Content-Type' => 'application/json',
                 ]
             ]);
 

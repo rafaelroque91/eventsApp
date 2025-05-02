@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Entity;
 
-use DateTimeImmutable;
+use Carbon\Carbon;
 
 class Event
 {
@@ -12,8 +12,8 @@ class Event
         public readonly ?string $id,
         public readonly string $title,
         public readonly string $description,
-        public readonly DateTimeImmutable $startDate,
-        public readonly DateTimeImmutable $endDate
+        public readonly Carbon $startDate,
+        public readonly Carbon $endDate
     ) {
     }
 
@@ -24,15 +24,10 @@ class Event
                 $data['id'] ?? null,
                 $data['title'] ?? '',
                 $data['description'] ?? '',
-                new \DateTimeImmutable($data['startDate'] ?? 'now'),
-                new \DateTimeImmutable($data['endDate'] ?? 'now')
+                Carbon::make($data['startDate'] ?? 'now'),
+                Carbon::make($data['endDate'] ?? 'now')
             );
         } catch (\Exception $e) {
-        var_dump('erro1231',$e->getMessage());
-        exit;
-            // Log the error and the problematic data
-            error_log("Error creating Event from array: " . $e->getMessage() . " Data: " . print_r($data, true));
-            // Return a default/empty event or re-throw a domain-specific exception
             throw new \RuntimeException("Failed to create Event entity from API data.", 0, $e);
         }
     }

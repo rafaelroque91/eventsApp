@@ -6,6 +6,7 @@ namespace App\Application\Validation;
 
 use App\Application\DTO\QueryParamsDTO;
 use App\Application\DTO\RequestDTOInterface;
+use Carbon\Carbon;
 
 trait RequestUtilTrait
 {
@@ -40,7 +41,7 @@ trait RequestUtilTrait
 
             if ($options[self::OPTION_FIELD_TYPE] == 'date') {
                 try {
-                    $value = \DateTimeImmutable::createFromFormat('Y-m-d', $fieldValue);
+                    $value = Carbon::make($fieldValue);
 
                     if ($value === false) {
                         $errors[] = [$field => "The field is invalid. Use YYYY-MM-DD format."];
@@ -77,7 +78,6 @@ trait RequestUtilTrait
         return $this->jsonResponse($data, 201);
     }
 
-    //todo fix the return types
     private function jsonResponse(mixed $data, int $statusCode = 200): string
     {
         http_response_code($statusCode);

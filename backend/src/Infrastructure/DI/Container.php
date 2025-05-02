@@ -77,7 +77,6 @@ class Container
             $instance = $this->resolve($id);
         }
 
-
         //Store instance if it's meant to be a singleton
         if (isset($this->singletons[$id])) {
             $this->instances[$id] = $instance;

@@ -50,12 +50,6 @@ class ApiClient
                 $headers,
                 json_encode($body));
 
-//            var_dump( [$method,
-//                API_BASE_URL .$endpoint,
-//                $headers,
-//                json_encode($body)]);
-//            exit;
-
             $response = $this->httpClient->send($request);
 
             return $this->decodeResponse($response);
@@ -64,7 +58,6 @@ class ApiClient
             $statusCode = $e->hasResponse() ? $e->getResponse()->getStatusCode() : 0;
             $responseBody = $e->hasResponse() ? (string) $e->getResponse()->getBody() : 'No response body';
 
-            // Log the detailed error
             error_log(sprintf(
                 "API Request Failed: %s %s | Status: %d | Response: %s | Exception: %s",
                 $method,
@@ -81,9 +74,6 @@ class ApiClient
                 $e
             );
         } catch (\Throwable $e) {
-            var_dump('exception2',$e->getMessage());
-            exit;
-            // Catch other potential errors (e.g., auth errors, decoding errors)
             error_log("General API Client Error: " . $e->getMessage());
             throw new ApiException("An unexpected error occurred during the API request.", 0, $e);
         }

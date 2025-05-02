@@ -22,9 +22,6 @@ class Router
 
     public function addRoute(string $method, string $path, string $controller, string $functionName): void
     {
-        // Basic regex conversion for parameters like /events/{id} -> /events/(\d+)
-        // More robust routing would use named parameters and type hints
-//        $pathRegex = preg_replace('/\{(\w+)\}/', '([^/]+)', $controller);
         $this->routes[$method][$path] = [$controller, $functionName];
     }
 

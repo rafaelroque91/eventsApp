@@ -6,7 +6,6 @@ namespace App\Infrastructure\Web\Resource;
 
 use App\Application\DTO\QueryParamsDTO;
 use Carbon\Carbon;
-use DateTimeImmutable;
 
 class EventResource
 {
