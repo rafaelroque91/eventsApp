@@ -24,7 +24,7 @@ class EventController
     ) {
     }
 
-    public function list(): void
+    public function list(): string
     {
         try {
             $params = $this->getQueryParams($_GET);
@@ -33,9 +33,9 @@ class EventController
 
             $responseData = EventResource::collection($events,$params);
 
-            $this->jsonResponse($responseData);
+            return $this->jsonResponse($responseData);
         } catch (Throwable $e) {
-            $this->jsonErrorResponse($e, "An unexpected error occurred while fetching events");
+            return $this->jsonErrorResponse($e, "An unexpected error occurred while fetching events");
         }
     }
 
@@ -55,15 +55,10 @@ class EventController
 
             $responseData = EventResource::toArray($newEvent);
 
-            //todo criar um resource para padronizar os erros
             return $this->jsonResponseCreated($responseData);
         } catch (\InvalidArgumentException $e) {
-            var_dump('aqui1');
-            exit;
             return $this->jsonErrorResponse($e, null,422);
         } catch (\Throwable $e) {
-            var_dump('aqui2',$e);
-            exit;
             return $this->jsonErrorResponse($e, "Failed to save event: ");
         }
     }
@@ -80,7 +75,7 @@ class EventController
             $eventData = EventResource::toArray($event);
             return $this->jsonResponse($eventData);
         } catch (\Throwable $e) {
-            $this->jsonErrorResponse($e, "Failed to fetch events");
+            return $this->jsonErrorResponse($e, "Failed to fetch events");
         }
     }
 }

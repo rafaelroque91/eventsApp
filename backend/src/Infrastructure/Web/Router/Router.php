@@ -64,7 +64,7 @@ class Router
         }
 
         if (is_callable([$controllerInstance, $method])) {
-            call_user_func_array([$controllerInstance, $method], $param);
+            echo call_user_func_array([$controllerInstance, $method], $param);
         } else {
             throw new \LogicException("Invalid controller function {$controller}. Method {$method}");
         }

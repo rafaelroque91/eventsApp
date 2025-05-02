@@ -42,3 +42,10 @@
 
 4. Update the CORS setting using the frontend IP/Port
    backend/config.php -> ALLOWED_CORS
+
+## Optional
+
+PHPStan
+```bash
+   docker compose exec php-fpm vendor/bin/phpstan analyse src
+   ```

@@ -82,8 +82,7 @@ trait RequestUtilTrait
     {
         http_response_code($statusCode);
         header('Content-Type: application/json');
-        echo json_encode($data);
-        exit;
+        return json_encode($data);
     }
 
     private function jsonResponseNotFound(string $message): string
