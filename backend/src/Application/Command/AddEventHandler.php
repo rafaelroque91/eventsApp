@@ -19,8 +19,8 @@ class AddEventHandler
         EventDTO $eventDto,
     ): Event {
 
-        if ($eventDto->endDate < $eventDto->startDate) {
-            throw new \InvalidArgumentException("End date cannot be before start date.");
+        if ($eventDto->endDate <= $eventDto->startDate) {
+            throw new \InvalidArgumentException("End date should be greater than start date.");
         }
 
         $newEvent = new Event(

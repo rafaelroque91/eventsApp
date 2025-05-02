@@ -17,17 +17,6 @@ class DependencyInjectionFactory
     {
         $container = New Container();
 
-        try {
-            $redis = new \Redis();
-            $connected = $redis->connect(REDIS_HOST, REDIS_PORT);
-            if (!$connected) {
-                throw new \RuntimeException("Could not connect to Redis at " . REDIS_HOST . ":" . REDIS_PORT);
-            }
-        } catch (\Throwable $e) {
-            error_log("Redis connection failed: " . $e->getMessage());
-            die("Error connecting to cache service. Please check logs.");
-        }
-
         $container->singleton(\Redis::class, function() {
             $redis = new \Redis();
             $connected = $redis->connect(REDIS_HOST, REDIS_PORT);

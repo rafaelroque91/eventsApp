@@ -1,5 +1,4 @@
 
-# Define a network for inter-container communication
 networks:
   app-network:
     driver: bridge
@@ -7,41 +6,36 @@ networks:
 services:
   redis:
     image: 'redis:alpine'
-    container_name: events-redis # Optional: give it a specific name
+    container_name: events-redis
     networks:
       - app-network
 
   webserver:
     image: 'nginx:alpine'
-    container_name: events-nginx # Optional: give it a specific name
+    container_name: events-nginx
     working_dir: /application
     volumes:
-      # Mount only the backend code to /application, matching the Nginx root
       - './backend:/application'
-      # Mount the updated Nginx config
       - './docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro' # :ro = read-only
     ports:
       - '50000:80'
     networks:
       - app-network
-    # Ensure php-fpm is running before nginx starts
     depends_on:
       - php-fpm
 
   php-fpm:
     build: docker/php-fpm
-    container_name: events-php # Optional: give it a specific name
+    container_name: events-php
     working_dir: /application
     volumes:
-      # Mount backend code to /application (matches Nginx root now)
       - './backend:/application'
-      # Mount PHP ini overrides (ensure paths inside container are correct for the base image)
       - './docker/php-fpm/php-ini-overrides.ini:/etc/php/8.4/fpm/conf.d/99-overrides.ini'
       - './docker/php-fpm/php-ini-overrides.ini:/etc/php/8.4/cli/conf.d/99-overrides.ini'
     networks:
       - app-network
     environment:
-      - REDIS_HOST=redis # Service name of the redis container
+      - REDIS_HOST=redis
       - REDIS_PORT=6379
     depends_on:
-      - redis # Optional, but good practice if PHP connects on startup
+      - redis

@@ -27,7 +27,7 @@ import EventModal from '@/components/EventModal.vue';
 
 const isModalVisible = ref(false);
 const selectedEventId = ref(null);
-const modalMode = ref('view'); // 'view' or 'create'
+const modalMode = ref('view');
 const createModalTrigger = ref(0);
 
 const routerViewKey = ref(0);
@@ -53,14 +53,13 @@ const closeModal = () => {
 const handleEventSaved = () => {
   closeModal();
   routerViewKey.value++;
-  console.log('Event saved, forcing RouterView reload by incrementing key to:', routerViewKey.value); // Log para depuração
+  console.log('Event saved, forcing RouterView reload by incrementing key to:', routerViewKey.value);
 };
 
 </script>
 
 <style>
-/* Adicionar estilos globais aqui se necessário, ou em main.css */
 body {
-  background-color: #f8f9fa; /* Um cinza claro para o fundo */
+  background-color: #f8f9fa;
 }
 </style>

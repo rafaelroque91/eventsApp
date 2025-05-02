@@ -39,45 +39,33 @@ class Container
 
     public function get(string $id): mixed
     {
-        //Return existing singleton instance if available
         if (isset($this->instances[$id])) {
             return $this->instances[$id];
         }
 
-        //Check if an explicit binding exists
         if (isset($this->bindings[$id])) {
             $concrete = $this->bindings[$id];
 
-            // If the binding is a factory closure, call it
             if ($concrete instanceof Closure) {
                 $instance = $concrete($this);
             }
-            // If the binding is a class name, resolve it (might be the same as $id)
             elseif (is_string($concrete) && class_exists($concrete)) {
-                // If the binding points to a different class, resolve that one instead
-                // Otherwise (if $concrete === $id), we fall through to auto-wiring below
                 if ($concrete !== $id) {
-                    return $this->get($concrete); // Resolve the target class
+                    return $this->get($concrete);
                 }
-                // If $concrete === $id, let auto-wiring handle it below
                 $instance = $this->resolve($id);
 
             } else {
-                // If it's neither a closure nor a class name, maybe it's a primitive value?
-                // Or throw an exception if only objects/factories are expected.
-                // For simplicity, we assume bindings are callables or class names for now.
                 throw new ContainerException("Binding for '{$id}' is not a callable or resolvable class name.");
             }
 
         } else {
-            //No explicit binding, attempt auto-wiring via Reflection
             if (!class_exists($id)) {
                 throw new NotFoundException("No binding or class found for '{$id}'.");
             }
             $instance = $this->resolve($id);
         }
 
-        //Store instance if it's meant to be a singleton
         if (isset($this->singletons[$id])) {
             $this->instances[$id] = $instance;
         }
