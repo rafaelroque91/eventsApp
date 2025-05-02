@@ -8,27 +8,33 @@
         <div class="row g-3">
           <div class="col-md-6">
             <label for="titleFilter" class="form-label">Title</label>
-            <input type="text" class="form-control" id="titleFilter" v-model="filters.title" @input="applyFiltersDebounced">
+            <input type="text" class="form-control" id="titleFilter" v-model="filters.title" @input="applyFiltersDebounced" :disabled="isLoading">
           </div>
           <div class="col-md-6">
             <label for="descFilter" class="form-label">Description</label>
-            <input type="text" class="form-control" id="descFilter" v-model="filters.description" @input="applyFiltersDebounced">
+            <input type="text" class="form-control" id="descFilter" v-model="filters.description" @input="applyFiltersDebounced" :disabled="isLoading">
           </div>
           <div class="col-md-6">
             <label for="startDateFilter" class="form-label">Start Date</label>
-            <input type="date" class="form-control" id="startDateFilter" v-model="filters.startDate" @change="applyFilters">
+            <input type="date" class="form-control" id="startDateFilter" v-model="filters.startDate" @change="applyFilters" :disabled="isLoading">
           </div>
           <div class="col-md-6">
             <label for="endDateFilter" class="form-label">End Date</label>
-            <input type="date" class="form-control" id="endDateFilter" v-model="filters.endDate" @change="applyFilters">
+            <input type="date" class="form-control" id="endDateFilter" v-model="filters.endDate" @change="applyFilters" :disabled="isLoading">
           </div>
-          <div class="col-12 text-end">
-            <button class="btn btn-secondary" @click="resetFilters">Reset Filters</button>
+          <div class="col-12 d-flex justify-content-end align-items-center">
+            <!-- Filter Loading Indicator -->
+            <div v-if="isLoading" class="me-3 text-primary">
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              <span class="ms-1">Applying filters...</span>
+            </div>
+            <button class="btn btn-secondary" @click="resetFilters" :disabled="isLoading">Reset Filters</button>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Initial Loading Indicator (only shows when list is empty and loading) -->
     <div v-if="isLoading && events.length === 0" class="text-center mt-5">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
@@ -39,8 +45,10 @@
       {{ errorMessage }}
     </div>
 
+    <!-- Event List -->
     <div v-else-if="events.length > 0">
-      <div class="list-group">
+      <!-- Optional: Add subtle opacity while filtering -->
+      <div class="list-group" :class="{ 'opacity-75': isLoading }">
         <div v-for="event in events" :key="event.id" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
           <div class="flex-grow-1 me-3">
             <h5 class="mb-1">{{ event.title }}</h5>
@@ -49,26 +57,28 @@
               {{ formatDate(event.startDate) }} - {{ formatDate(event.endDate) }}
             </small>
           </div>
-          <button class="btn btn-outline-primary btn-sm flex-shrink-0" @click="emitOpenViewModal(event.id)">
+          <button class="btn btn-outline-primary btn-sm flex-shrink-0" @click="emitOpenViewModal(event.id)" :disabled="isLoading">
             View Details
           </button>
         </div>
       </div>
 
+      <!-- Load More Button -->
       <div class="text-center mt-4 mb-4">
         <button
             v-if="canLoadMore"
             class="btn btn-primary"
             @click="loadMoreEvents"
-            :disabled="isLoadingMore"
+            :disabled="isLoadingMore || isLoading"
         >
-          <span v-if="isLoadingMore" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          {{ isLoadingMore ? 'Loading...' : 'Load More' }}
+        <span v-if="isLoadingMore" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        {{ isLoadingMore ? 'Loading...' : 'Load More' }}
         </button>
-        <p v-else-if="!isLoading && events.length > 0" class="text-muted">No more events to load.</p>
+        <p v-else-if="!isLoading && !isLoadingMore && events.length > 0" class="text-muted">No more events to load.</p>
       </div>
 
     </div>
+    <!-- No Events Found Message -->
     <div v-else-if="!isLoading && events.length === 0" class="text-center mt-5 text-muted">
       <p>No events found matching your criteria.</p>
     </div>
@@ -84,8 +94,8 @@ import { debounce } from 'lodash-es'; // Importar debounce
 const emit = defineEmits(['open-view-modal']);
 
 const events = ref([]); // Array para armazenar os eventos
-const isLoading = ref(false);
-const isLoadingMore = ref(false); // Loading específico para "Load More"
+const isLoading = ref(false); // Loading for initial load AND filtering
+const isLoadingMore = ref(false); // Loading specific for "Load More"
 const errorMessage = ref('');
 const currentPage = ref(1);
 const lastPage = ref(1);
@@ -103,10 +113,11 @@ const canLoadMore = computed(() => currentPage.value < lastPage.value);
 
 // Função para buscar eventos
 const fetchEvents = async (page = 1, loadMore = false) => {
+  // Set appropriate loading state
   if (!loadMore) {
-    isLoading.value = true; // Loading principal para nova busca/filtro
+    isLoading.value = true; // Use isLoading for filtering/initial load
   } else {
-    isLoadingMore.value = true; // Loading específico para "load more"
+    isLoadingMore.value = true; // Use isLoadingMore for pagination
   }
   errorMessage.value = '';
 
@@ -125,10 +136,12 @@ const fetchEvents = async (page = 1, loadMore = false) => {
       const pageInfo = response.data.meta.page;
 
       if (loadMore) {
-        events.value = [...events.value, ...newEvents]; // Adiciona aos existentes
+        events.value = [...events.value, ...newEvents];
       } else {
-        events.value = newEvents; // Substitui pelos novos resultados
+        events.value = newEvents; // Substitui pelos novos resultados (filtering/initial)
       }
+
+      console.log('events',events.value);
       currentPage.value = pageInfo.current_page;
       lastPage.value = pageInfo.last_page;
     } else {
@@ -142,6 +155,7 @@ const fetchEvents = async (page = 1, loadMore = false) => {
     errorMessage.value = 'Failed to load events. ' + (error.response?.data?.message || error.message);
     if (!loadMore) events.value = []; // Limpa a lista em caso de erro na busca inicial/filtro
   } finally {
+    // Reset appropriate loading state
     if (!loadMore) {
       isLoading.value = false;
     } else {
@@ -152,23 +166,24 @@ const fetchEvents = async (page = 1, loadMore = false) => {
 
 // Função para carregar mais eventos
 const loadMoreEvents = () => {
-  if (canLoadMore.value) {
+  if (canLoadMore.value && !isLoading.value && !isLoadingMore.value) { // Prevent double loading
     fetchEvents(currentPage.value + 1, true);
   }
 };
 
 // Função para aplicar filtros (chamada diretamente ou via debounce)
 const applyFilters = () => {
+  if (isLoading.value || isLoadingMore.value) return; // Prevent applying filters while already loading
   currentPage.value = 1; // Reseta a página ao aplicar filtros
   fetchEvents(1, false); // Busca a primeira página com os novos filtros
 }
 
 // Versão com Debounce para campos de texto
-// Instalar lodash-es: npm install lodash-es
 const applyFiltersDebounced = debounce(applyFilters, 500); // Espera 500ms após parar de digitar
 
 // Função para resetar filtros
 const resetFilters = () => {
+  if (isLoading.value || isLoadingMore.value) return; // Prevent reset while loading
   filters.title = '';
   filters.description = '';
   filters.startDate = '';
@@ -207,6 +222,7 @@ const formatDate = (dateString) => {
 
 // Emitir evento para App.vue abrir o modal de detalhes
 const emitOpenViewModal = (eventId) => {
+  if (isLoading.value) return; // Prevent opening modal while list is refreshing
   emit('open-view-modal', eventId);
 }
 
@@ -223,5 +239,11 @@ onMounted(() => {
 }
 .card-header {
   font-weight: bold;
+}
+
+/* Style for list opacity during filtering */
+.opacity-75 {
+  opacity: 0.75;
+  transition: opacity 0.15s ease-in-out;
 }
 </style>
