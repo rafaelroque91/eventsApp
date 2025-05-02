@@ -2,7 +2,11 @@
   <div>
     <AppNavbar @open-create-modal="handleOpenCreateModal" />
     <main class="container mt-4">
-      <RouterView :key="$route.fullPath" @open-view-modal="handleOpenViewModal" :open-create-modal-trigger="createModalTrigger" />
+      <RouterView
+          :key="routerViewKey"
+          @open-view-modal="handleOpenViewModal"
+          :open-create-modal-trigger="createModalTrigger"
+      />
     </main>
 
     <EventModal
@@ -26,6 +30,8 @@ const selectedEventId = ref(null);
 const modalMode = ref('view'); // 'view' or 'create'
 const createModalTrigger = ref(0);
 
+const routerViewKey = ref(0);
+
 const handleOpenViewModal = (eventId) => {
   selectedEventId.value = eventId;
   modalMode.value = 'view';
@@ -41,20 +47,13 @@ const handleOpenCreateModal = () => {
 
 const closeModal = () => {
   isModalVisible.value = false;
-  // É bom resetar aqui também, embora o modal possa fazer internamente
   selectedEventId.value = null;
 };
 
 const handleEventSaved = () => {
   closeModal();
-  // Aqui, idealmente, precisaríamos de uma forma de avisar a EventList
-  // para recarregar. Uma solução simples é usar a key na RouterView
-  // para forçar a remontagem, ou usar um event bus/Pinia/Vuex.
-  // A solução com `:key="$route.fullPath"` já ajuda em navegações,
-  // mas para refresh pós-save, pode precisar de algo mais.
-  // Por enquanto, vamos confiar que o usuário verá a mudança
-  // ou que a recarga da página/navegação atualize.
-  // Uma solução mais avançada seria necessária para atualização em tempo real.
+  routerViewKey.value++;
+  console.log('Event saved, forcing RouterView reload by incrementing key to:', routerViewKey.value); // Log para depuração
 };
 
 </script>

@@ -30,7 +30,6 @@
 <script setup>
 import { defineEmits } from 'vue';
 
-// Define o evento que este componente pode emitir
 const emit = defineEmits(['open-create-modal']);
 
 const emitOpenCreateModal = () => {
@@ -39,20 +38,19 @@ const emitOpenCreateModal = () => {
 </script>
 
 <style scoped>
-/* Estilos adicionais se necessário */
 .btn-link.nav-link {
-  color: rgba(255, 255, 255, 0.55); /* Cor padrão do link da navbar */
+  color: rgba(255, 255, 255, 0.55);
   text-decoration: none;
 }
 .btn-link.nav-link:hover,
 .btn-link.nav-link.active {
-  color: rgba(255, 255, 255, 0.75); /* Cor ao passar o mouse/ativo */
+  color: rgba(255, 255, 255, 0.75);
 }
-/* Garante que o botão pareça um link normal na navbar */
+
 .btn-link {
   border: none;
   background: none;
-  padding: 0.5rem 1rem; /* Mesmo padding dos outros nav-links */
-  vertical-align: baseline; /* Alinha com o texto dos outros links */
+  padding: 0.5rem 1rem;
+  vertical-align: baseline;
 }
 </style>
