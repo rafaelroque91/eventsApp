@@ -1,6 +1,6 @@
 
 
-# Web App to manage Events using Civic Plus API
+# Web App to List Events using Civic Plus API
 
 - Backend: PHP 8.3
 -  Frontend: Vue js
