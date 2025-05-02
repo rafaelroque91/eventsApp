@@ -14,15 +14,13 @@
 
 2. Fill in the variables in `config.php` with your API credentials.
 
-3. Navigate to the `backend` folder and install dependencies:
+3. Start the backend services using Docker Compose:
    ```bash
-   cd backend
-   composer install
+   docker-compose up -d
    ```
-
-4. Start the backend services using Docker Compose:
+4. Install dependencies:
    ```bash
-   docker-compose up
+   docker compose exec php-fpm composer install
    ```
 
 ## Frontend Setup
@@ -41,4 +39,6 @@
    ```bash
    npm run dev
    ```
-```
+
+4. Update the CORS setting using the frontend IP/Port
+   backend/config.php -> ALLOWED_CORS
