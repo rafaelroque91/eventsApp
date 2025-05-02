@@ -1,6 +1,6 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
-import EventList from '../components/EventList.vue' // Importe sua view
+import EventList from '../components/EventList.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -10,7 +10,6 @@ const router = createRouter({
             name: 'EventList',
             component: EventList
         },
-        // Você pode adicionar mais rotas aqui se necessário
     ]
 })
 

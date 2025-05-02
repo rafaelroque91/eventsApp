@@ -44,7 +44,7 @@ class ApiEventRepository implements EventRepositoryInterface
     public function findById(string $id): ?Event
     {
         try {
-            $data = $this->apiClient->get('/api/Events' . $id);
+            $data = $this->apiClient->get('/api/Events/' . $id);
 
             return Event::fromArray($data);
         } catch (ApiException $e) {
@@ -61,7 +61,7 @@ class ApiEventRepository implements EventRepositoryInterface
     {
         try {
             $payload = $event->toApiPayload();
-            $responseData = $this->apiClient->post(API_ENDPOINT_EVENTS, $payload);
+            $responseData = $this->apiClient->post('/api/Events', $payload);
 
             return Event::fromArray($responseData);
         } catch (ApiException $e) {

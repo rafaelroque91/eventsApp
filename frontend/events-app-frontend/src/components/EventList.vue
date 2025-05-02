@@ -1,213 +1,227 @@
 <template>
-  <div class="event-list-container">
-    <h1>Events</h1>
+  <div>
+    <h1 class="mb-4">Events List</h1>
 
-    <button @click="openCreateModal" class="create-button">Create New Event</button>
-
-    <div v-if="isLoading" class="loading">Loading events...</div>
-    <div v-if="errorMessage" class="error">{{ errorMessage }}</div>
-
-    <ul v-if="events.length > 0" class="event-list">
-      <li v-for="event in events" :key="event.id" class="event-item">
-        <div class="event-info">
-          <strong>{{ event.title }}</strong>
-          <p v-if="event.description">{{ event.description }}</p>
-          <small>
-            Starts: {{ formatDate(event.startDate) }} | Ends: {{ formatDate(event.endDate) }}
-          </small>
+    <div class="card mb-4">
+      <div class="card-header">Filters</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="titleFilter" class="form-label">Title</label>
+            <input type="text" class="form-control" id="titleFilter" v-model="filters.title" @input="applyFiltersDebounced">
+          </div>
+          <div class="col-md-6">
+            <label for="descFilter" class="form-label">Description</label>
+            <input type="text" class="form-control" id="descFilter" v-model="filters.description" @input="applyFiltersDebounced">
+          </div>
+          <div class="col-md-6">
+            <label for="startDateFilter" class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="startDateFilter" v-model="filters.startDate" @change="applyFilters">
+          </div>
+          <div class="col-md-6">
+            <label for="endDateFilter" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="endDateFilter" v-model="filters.endDate" @change="applyFilters">
+          </div>
+          <div class="col-12 text-end">
+            <button class="btn btn-secondary" @click="resetFilters">Reset Filters</button>
+          </div>
         </div>
-        <button @click="openViewModal(event.id)" class="details-button">View Details</button>
-      </li>
-    </ul>
-    <div v-else-if="!isLoading && events.length === 0 && !errorMessage" class="no-events">
-      No events found.
+      </div>
     </div>
 
-    <EventModal
-        :show="isModalVisible"
-        :event-id="selectedEventId"
-        @close="closeModal"
-        @event-saved="handleEventSaved"
-    />
+    <div v-if="isLoading && events.length === 0" class="text-center mt-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p>Loading events...</p>
+    </div>
+    <div v-else-if="errorMessage" class="alert alert-danger" role="alert">
+      {{ errorMessage }}
+    </div>
+
+    <div v-else-if="events.length > 0">
+      <div class="list-group">
+        <div v-for="event in events" :key="event.id" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+          <div class="flex-grow-1 me-3">
+            <h5 class="mb-1">{{ event.title }}</h5>
+            <p class="mb-1 text-muted">{{ event.description || 'No description' }}</p>
+            <small>
+              {{ formatDate(event.startDate) }} - {{ formatDate(event.endDate) }}
+            </small>
+          </div>
+          <button class="btn btn-outline-primary btn-sm flex-shrink-0" @click="emitOpenViewModal(event.id)">
+            View Details
+          </button>
+        </div>
+      </div>
+
+      <div class="text-center mt-4 mb-4">
+        <button
+            v-if="canLoadMore"
+            class="btn btn-primary"
+            @click="loadMoreEvents"
+            :disabled="isLoadingMore"
+        >
+          <span v-if="isLoadingMore" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          {{ isLoadingMore ? 'Loading...' : 'Load More' }}
+        </button>
+        <p v-else-if="!isLoading && events.length > 0" class="text-muted">No more events to load.</p>
+      </div>
+
+    </div>
+    <div v-else-if="!isLoading && events.length === 0" class="text-center mt-5 text-muted">
+      <p>No events found matching your criteria.</p>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed, defineEmits } from 'vue';
 import EventService from '@/services/EventService';
-import EventModal from '@/components/EventModal.vue';
+import { debounce } from 'lodash-es'; // Importar debounce
 
-const events = ref([]);
+const emit = defineEmits(['open-view-modal']);
+
+const events = ref([]); // Array para armazenar os eventos
 const isLoading = ref(false);
+const isLoadingMore = ref(false); // Loading específico para "Load More"
 const errorMessage = ref('');
-const isModalVisible = ref(false);
-const selectedEventId = ref(null);
+const currentPage = ref(1);
+const lastPage = ref(1);
 
-const fetchEvents = async () => {
-  isLoading.value = true;
+// Filtros reativos
+const filters = reactive({
+  title: '',
+  description: '',
+  startDate: '',
+  endDate: ''
+});
+
+// Computed property para verificar se pode carregar mais
+const canLoadMore = computed(() => currentPage.value < lastPage.value);
+
+// Função para buscar eventos
+const fetchEvents = async (page = 1, loadMore = false) => {
+  if (!loadMore) {
+    isLoading.value = true; // Loading principal para nova busca/filtro
+  } else {
+    isLoadingMore.value = true; // Loading específico para "load more"
+  }
   errorMessage.value = '';
-  events.value = [];
-  try {
-    //todo add pagination
-    const response = await EventService.getEvents(1);
 
-    if (response.data.data && Array.isArray(response.data.data)) {
-      events.value = response.data.data;
-      console.log('response',response.data.data);
+  // Prepara parâmetros removendo filtros vazios
+  const params = { page };
+  for (const key in filters) {
+    if (filters[key]) {
+      params[key] = filters[key];
+    }
+  }
+
+  try {
+    const response = await EventService.getEvents(params);
+    if (response.data && response.data.data && response.data.meta && response.data.meta.page) {
+      const newEvents = response.data.data;
+      const pageInfo = response.data.meta.page;
+
+      if (loadMore) {
+        events.value = [...events.value, ...newEvents]; // Adiciona aos existentes
+      } else {
+        events.value = newEvents; // Substitui pelos novos resultados
+      }
+      currentPage.value = pageInfo.current_page;
+      lastPage.value = pageInfo.last_page;
     } else {
-      console.warn("Unexpected API response structure:", response.data);
-      events.value = [];
+      console.warn("API response structure might be different:", response.data);
+      if (!loadMore) events.value = []; // Limpa se for busca inicial/filtro
+      errorMessage.value = "Received unexpected data structure from server.";
     }
 
   } catch (error) {
     console.error('Error fetching events:', error);
     errorMessage.value = 'Failed to load events. ' + (error.response?.data?.message || error.message);
+    if (!loadMore) events.value = []; // Limpa a lista em caso de erro na busca inicial/filtro
   } finally {
-    isLoading.value = false;
+    if (!loadMore) {
+      isLoading.value = false;
+    } else {
+      isLoadingMore.value = false;
+    }
   }
 };
 
+// Função para carregar mais eventos
+const loadMoreEvents = () => {
+  if (canLoadMore.value) {
+    fetchEvents(currentPage.value + 1, true);
+  }
+};
+
+// Função para aplicar filtros (chamada diretamente ou via debounce)
+const applyFilters = () => {
+  currentPage.value = 1; // Reseta a página ao aplicar filtros
+  fetchEvents(1, false); // Busca a primeira página com os novos filtros
+}
+
+// Versão com Debounce para campos de texto
+// Instalar lodash-es: npm install lodash-es
+const applyFiltersDebounced = debounce(applyFilters, 500); // Espera 500ms após parar de digitar
+
+// Função para resetar filtros
+const resetFilters = () => {
+  filters.title = '';
+  filters.description = '';
+  filters.startDate = '';
+  filters.endDate = '';
+  applyFilters(); // Aplica os filtros (vazios) para recarregar
+}
+
+
+// Função para formatar datas
 const formatDate = (dateString) => {
   if (!dateString || dateString.startsWith('0001-01-01')) {
     return 'N/A';
   }
   try {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return 'Invalid Date';
-    }
-    return date.toLocaleDateString(undefined, {
-      year: 'numeric', month: 'short', day: 'numeric'
+    // Adiciona verificação se a data vem só como YYYY-MM-DD (sem HORA/TIMEZONE)
+    // Nestes casos, new Date() pode interpretar como UTC 00:00, causando erro de 1 dia
+    // Solução: Usar UTC para evitar problemas de timezone na conversão simples
+    const year = date.getUTCFullYear();
+    const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+    const day = date.getUTCDate().toString().padStart(2, '0');
+
+    if (isNaN(year)) return 'Invalid Date'; // Verifica se a conversão foi válida
+
+    // Retorna no formato local, mas baseado nos componentes UTC extraídos
+    const displayDate = new Date(Date.UTC(year, date.getUTCMonth(), day));
+    return displayDate.toLocaleDateString(undefined, {
+      year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' // Garante consistência
     });
+
   } catch (e) {
     console.error("Error formatting date:", dateString, e);
     return 'Invalid Date';
   }
 };
 
+// Emitir evento para App.vue abrir o modal de detalhes
+const emitOpenViewModal = (eventId) => {
+  emit('open-view-modal', eventId);
+}
 
-const openViewModal = (eventId) => {
-  selectedEventId.value = eventId;
-  isModalVisible.value = true;
-};
-
-const openCreateModal = () => {
-  selectedEventId.value = null;
-  isModalVisible.value = true;
-};
-
-const closeModal = () => {
-  isModalVisible.value = false;
-  selectedEventId.value = null;
-};
-
-const handleEventSaved = () => {
-  closeModal();
-  fetchEvents();
-};
-
+// Busca os eventos iniciais quando o componente é montado
 onMounted(() => {
-  fetchEvents();
+  fetchEvents(1);
 });
 </script>
 
 <style scoped>
-.event-list-container {
-  padding: 20px;
-  max-width: 800px;
-  margin: 0 auto;
-  font-family: sans-serif;
+/* Estilos específicos se Bootstrap não for suficiente */
+.list-group-item h5 {
+  color: #0d6efd; /* Azul primário do Bootstrap */
 }
-
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.create-button {
-  display: block;
-  margin: 0 auto 25px auto;
-  padding: 10px 20px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1em;
-}
-.create-button:hover {
-  background-color: #218838;
-}
-
-.loading, .error, .no-events {
-  text-align: center;
-  padding: 20px;
-  margin-top: 20px;
-  border-radius: 5px;
-}
-
-.loading {
-  color: #555;
-}
-
-.error {
-  color: #D8000C;
-  background-color: #FFD2D2;
-  border: 1px solid #D8000C;
-}
-.no-events {
-  color: #777;
-  font-style: italic;
-}
-
-
-.event-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.event-item {
-  background-color: #f9f9f9;
-  border: 1px solid #eee;
-  padding: 15px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.event-info {
-  flex-grow: 1;
-  margin-right: 15px; /* Espaço antes do botão */
-}
-.event-info strong {
-  font-size: 1.1em;
-  display: block;
-  margin-bottom: 5px;
-}
-.event-info p {
-  margin: 5px 0;
-  color: #333;
-  font-size: 0.95em;
-}
-.event-info small {
-  color: #666;
-  font-size: 0.85em;
-}
-
-.details-button {
-  padding: 8px 12px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.details-button:hover {
-  background-color: #0056b3;
+.card-header {
+  font-weight: bold;
 }
 </style>
