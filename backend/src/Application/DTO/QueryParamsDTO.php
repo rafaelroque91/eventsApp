@@ -8,7 +8,7 @@ class QueryParamsDTO
 {
     public function __construct(
         public ?int $page,
-        public ?string $filter,
+        public ?array $filters,
         public ?string $orderBy,
     ) {}
     

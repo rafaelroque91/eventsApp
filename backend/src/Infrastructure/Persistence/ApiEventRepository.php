@@ -22,7 +22,7 @@ class ApiEventRepository implements EventRepositoryInterface
     public function findAll(QueryParamsDTO $params): array
     {
         try {
-            return $this->apiClient->get($this->buildUrlWithParams('/api/Events', $params), $params);
+            return $this->apiClient->get($this->buildUrlWithParams('/api/Events', $params));
         } catch (ApiException $e) {
             error_log("Failed to fetch events: " . $e->getMessage());
             throw new ApiException("An unexpected error occurred while fetching events.", 0, $e);
@@ -31,14 +31,40 @@ class ApiEventRepository implements EventRepositoryInterface
 
     private function buildUrlWithParams(string $url, QueryParamsDTO $params) : string
     {
+        $filters = $this->buildODataFilter($params->filters);
         $query = http_build_query([
             '$top' => API_PAGE_SIZE,
             '$skip' => ($params->page - 1) * API_PAGE_SIZE,
-            '$filter' => $params->filter,
+            '$filter' => $filters,
             '$orderBy' => $params->orderBy,
         ]);
 
         return $url . '?' . $query;
+    }
+
+    private function buildODataFilter(?array $filters): ?string
+    {
+        if ($filters == null) {
+            return null;
+        }
+        $conditions = [];
+
+        foreach ($filters as $field => $value) {
+            if ($value === '' || $value === null) {
+                continue;
+            }
+
+            if ($field === 'startDate') {
+                $conditions[] = "{$field} ge {$value}";
+            } elseif ($field === 'endDate') {
+                $conditions[] = "{$field} le {$value}";
+            } else {
+                $escaped = str_replace("'", "''", $value);
+                $conditions[] = "{$field} eq '{$escaped}'";
+            }
+        }
+
+        return implode(' and ', $conditions);
     }
 
     public function findById(string $id): ?Event

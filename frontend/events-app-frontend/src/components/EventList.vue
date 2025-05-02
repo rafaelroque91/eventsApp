@@ -71,8 +71,8 @@
             @click="loadMoreEvents"
             :disabled="isLoadingMore || isLoading"
         >
-        <span v-if="isLoadingMore" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        {{ isLoadingMore ? 'Loading...' : 'Load More' }}
+          <span v-if="isLoadingMore" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          {{ isLoadingMore ? 'Loading...' : 'Load More' }}
         </button>
         <p v-else-if="!isLoading && !isLoadingMore && events.length > 0" class="text-muted">No more events to load.</p>
       </div>
@@ -111,6 +111,7 @@ const filters = reactive({
 // Computed property para verificar se pode carregar mais
 const canLoadMore = computed(() => currentPage.value < lastPage.value);
 
+// --- START: UPDATED fetchEvents FUNCTION ---
 // Função para buscar eventos
 const fetchEvents = async (page = 1, loadMore = false) => {
   // Set appropriate loading state
@@ -121,16 +122,29 @@ const fetchEvents = async (page = 1, loadMore = false) => {
   }
   errorMessage.value = '';
 
-  // Prepara parâmetros removendo filtros vazios
+  // Base parameters always include the page
   const params = { page };
+
+  // Create an object to hold the actual filter values
+  const filterData = {};
   for (const key in filters) {
-    if (filters[key]) {
-      params[key] = filters[key];
+    if (filters[key]) { // Only include filters that have a value
+      filterData[key] = filters[key];
     }
   }
 
+  // If there are any active filters, add them under the 'filter' key
+  if (Object.keys(filterData).length > 0) {
+    params.filter = filterData; // Nest the filters: { page: 1, filter: { title: '...', ... } }
+  }
+
+  console.log("Sending params:", params); // Optional: Log to verify structure
+
   try {
+    // Pass the modified params object to the service
+    // Axios (or similar) will serialize params.filter correctly
     const response = await EventService.getEvents(params);
+
     if (response.data && response.data.data && response.data.meta && response.data.meta.page) {
       const newEvents = response.data.data;
       const pageInfo = response.data.meta.page;
@@ -138,22 +152,22 @@ const fetchEvents = async (page = 1, loadMore = false) => {
       if (loadMore) {
         events.value = [...events.value, ...newEvents];
       } else {
-        events.value = newEvents; // Substitui pelos novos resultados (filtering/initial)
+        events.value = newEvents; // Replace with new results (filtering/initial)
       }
 
-      console.log('events',events.value);
+      console.log('events', events.value);
       currentPage.value = pageInfo.current_page;
       lastPage.value = pageInfo.last_page;
     } else {
       console.warn("API response structure might be different:", response.data);
-      if (!loadMore) events.value = []; // Limpa se for busca inicial/filtro
+      if (!loadMore) events.value = []; // Clear if it's an initial/filter search
       errorMessage.value = "Received unexpected data structure from server.";
     }
 
   } catch (error) {
     console.error('Error fetching events:', error);
     errorMessage.value = 'Failed to load events. ' + (error.response?.data?.message || error.message);
-    if (!loadMore) events.value = []; // Limpa a lista em caso de erro na busca inicial/filtro
+    if (!loadMore) events.value = []; // Clear list on error during initial/filter search
   } finally {
     // Reset appropriate loading state
     if (!loadMore) {
@@ -163,6 +177,8 @@ const fetchEvents = async (page = 1, loadMore = false) => {
     }
   }
 };
+// --- END: UPDATED fetchEvents FUNCTION ---
+
 
 // Função para carregar mais eventos
 const loadMoreEvents = () => {
