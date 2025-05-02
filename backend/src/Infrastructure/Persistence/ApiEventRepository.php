@@ -22,7 +22,7 @@ class ApiEventRepository implements EventRepositoryInterface
     public function findAll(QueryParamsDTO $params): array
     {
         try {
-            return $this->apiClient->get($this->buildUrlWithParams(API_ENDPOINT_EVENTS, $params), $params);
+            return $this->apiClient->get($this->buildUrlWithParams('/api/Events', $params), $params);
         } catch (ApiException $e) {
             error_log("Failed to fetch events: " . $e->getMessage());
             throw new ApiException("An unexpected error occurred while fetching events.", 0, $e);
@@ -44,7 +44,7 @@ class ApiEventRepository implements EventRepositoryInterface
     public function findById(string $id): ?Event
     {
         try {
-            $data = $this->apiClient->get(API_ENDPOINT_EVENT_DETAIL_PREFIX . $id);
+            $data = $this->apiClient->get('/api/Events' . $id);
 
             return Event::fromArray($data);
         } catch (ApiException $e) {

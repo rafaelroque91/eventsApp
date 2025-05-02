@@ -23,8 +23,8 @@ class EventResource
 
     public static function collection(array $data, QueryParamsDTO $params) : array
     {
-        $total = $data['total'];
-        $items = $data['items'];
+        $total = $data['total'] ?? 0;
+        $items = $data['items'] ?? [];
 
         $data = array_map(function ($item) {
             return self::toArray((object) $item);

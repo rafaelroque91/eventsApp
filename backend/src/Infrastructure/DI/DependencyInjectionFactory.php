@@ -23,14 +23,9 @@ class DependencyInjectionFactory
             if (!$connected) {
                 throw new \RuntimeException("Could not connect to Redis at " . REDIS_HOST . ":" . REDIS_PORT);
             }
-
-//            $tokenCache = new RedisTokenCache($redis, TOKEN_CACHE_KEY, TOKEN_LIFETIME_SECONDS);
         } catch (\Throwable $e) {
-            // Fallback or error handling if Redis is unavailable
             error_log("Redis connection failed: " . $e->getMessage());
-            // You might want a NullCache implementation as a fallback
-            // For now, we'll let it fail or implement a simple in-memory cache for dev
-            die("Error connecting to cache service. Please check logs."); // Or handle more gracefully
+            die("Error connecting to cache service. Please check logs.");
         }
 
         $container->singleton(\Redis::class, function() {
@@ -48,7 +43,7 @@ class DependencyInjectionFactory
 
         $container->singleton(RedisTokenCache::class, function(Container $c) {
             return new RedisTokenCache(
-                $c->get(\Redis::class), // Use Redis::class if using ext-redis
+                $c->get(\Redis::class),
                 TOKEN_CACHE_KEY,
             );
         });
@@ -58,7 +53,7 @@ class DependencyInjectionFactory
             return new AuthService(
                 $c->get(GuzzleClient::class),
                 $c->get(RedisTokenCache::class),
-                AUTH_URL,
+                API_BASE_URL . '/api/Auth',
                 CLIENT_ID,
                 CLIENT_SECRET
             );

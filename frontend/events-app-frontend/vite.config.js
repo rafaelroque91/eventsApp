@@ -1,22 +1,21 @@
-// vite.config.js
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
+  },
   server: {
+    //proxy to all api calls to /api/v1 will be sent to the target
     proxy: {
-      // String shorthand: '/api' -> 'http://localhost:3000/api'
-      // Change target to your actual backend server address and port
-      '/api': {
-        target: 'http://localhost:50000', // <-- YOUR BACKEND ADDRESS
-        changeOrigin: true, // Needed for virtual hosted sites
-        // Optional: rewrite path if your backend doesn't expect /api prefix
-        // rewrite: (path) => path.replace(/^\/api/, '')
+      '/api/v1': {
+        target: 'http://localhost:50000',
+        changeOrigin: true,
       }
-      // You can add more proxy rules if needed
-      // '/auth': { ... }
     }
   }
 })

@@ -1,6 +1,12 @@
+// src/main.js
 import { createApp } from 'vue'
-import './style.css' // Default Vite styles (can be removed/modified)
-import 'bootstrap/dist/css/bootstrap.min.css';
 import App from './App.vue'
+import router from './router' // Importa o router
 
-createApp(App).mount('#app') // Mounts to <div id="app"> in index.html
+// import './assets/main.css' // Ou seu arquivo CSS principal
+
+const app = createApp(App)
+
+app.use(router) // Usa o router
+
+app.mount('#app')

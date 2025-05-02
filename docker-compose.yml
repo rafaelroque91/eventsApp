@@ -40,7 +40,6 @@ services:
       - './docker/php-fpm/php-ini-overrides.ini:/etc/php/8.4/cli/conf.d/99-overrides.ini'
     networks:
       - app-network
-    # Make PHP aware of Redis hostname
     environment:
       - REDIS_HOST=redis # Service name of the redis container
       - REDIS_PORT=6379
