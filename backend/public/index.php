@@ -13,14 +13,19 @@ use App\Infrastructure\DI\DependencyInjectionFactory;
 use App\Infrastructure\Web\Router\RouterFactory;
 use App\Infrastructure\Http\Middleware\CORSMiddleware;
 
+//Setup Dependency Injections
 $container = DependencyInjectionFactory::create();
+
+//Setup Routes
 $router = RouterFactory::create($container);
 
+//Setup CORS
 CORSMiddleware::setup();
 
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
+//resolve route -> controller / method
 $router->callRoute($requestMethod, $requestUri);
 
 ?>

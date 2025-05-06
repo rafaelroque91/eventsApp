@@ -13,6 +13,10 @@ use App\Infrastructure\Persistence\RedisTokenCache;
 
 class DependencyInjectionFactory
 {
+    /**
+     * register all dependencies injections (singletons, bindings)
+     * @return Container
+     */
     public static function create() : Container
     {
         $container = New Container();

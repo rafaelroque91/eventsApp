@@ -8,6 +8,13 @@ use Carbon\Carbon;
 
 class Event
 {
+    /**
+     * @param string|null $id
+     * @param string $title
+     * @param string $description
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     */
     public function __construct(
         public readonly ?string $id,
         public readonly string $title,
@@ -17,6 +24,10 @@ class Event
     ) {
     }
 
+    /**
+     * @param array $data
+     * @return self
+     */
     public static function fromArray(array $data): self
     {
         try {
@@ -32,6 +43,9 @@ class Event
         }
     }
 
+    /**
+     * @return array
+     */
     public function toApiPayload(): array
     {
         return [

@@ -9,6 +9,11 @@ use Carbon\Carbon;
 
 class EventResource
 {
+    /**
+     * format the event object response
+     * @param $event
+     * @return array
+     */
     public static function toArray($event): array
     {
         return [
@@ -20,6 +25,12 @@ class EventResource
         ];
     }
 
+    /**
+     * format the event list response
+     * @param array $data
+     * @param QueryParamsDTO $params
+     * @return array
+     */
     public static function collection(array $data, QueryParamsDTO $params) : array
     {
         $total = $data['total'] ?? 0;
@@ -43,15 +54,13 @@ class EventResource
                 ]
             ]
         ];
-//
-//  "links": {
-//            "first": "http://localhost/api/v1/posts?page[number]=1&page[size]=2",
-//    "prev": null,
-//    "next": "http://localhost/api/v1/posts?page[number]=2&page[size]=2",
-//    "last": "http://localhost/api/v1/posts?page[number]=5&page[size]=2"
-//  }
-
     }
+
+    /**
+     * format date to Y-m-d
+     * @param mixed $date
+     * @return string|null
+     */
     private static function formatDate(mixed $date) : ?string
     {
         if ($date == null) {
@@ -63,5 +72,4 @@ class EventResource
         }
         return $date->format('Y-m-d');
     }
-
 }

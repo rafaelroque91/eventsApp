@@ -14,22 +14,46 @@ use Psr\Container\ContainerExceptionInterface;
 class Router
 {
     use RequestUtilTrait;
+
     private array $routes = [];
 
     public function __construct(
         private readonly Container $container)
     {}
 
+    /**
+     * Add routes and relates to controller / method
+     * @param string $method
+     * @param string $path
+     * @param string $controller
+     * @param string $functionName
+     * @return void
+     */
     public function addRoute(string $method, string $path, string $controller, string $functionName): void
     {
         $this->routes[$method][$path] = [$controller, $functionName];
     }
 
+    /**
+     *  Add API routes and relates to controller / method
+     * @param string $method
+     * @param string $path
+     * @param string $controller
+     * @param string $functionName
+     * @param string $apiVersion
+     * @return void
+     */
     public function addAPIRoute(string $method, string $path, string $controller, string $functionName, string $apiVersion = 'v1'): void
     {
         $this->addRoute($method, '/api/'.$apiVersion.$path, $controller, $functionName);
     }
 
+    /**
+     * Resolve route -> controller / method
+     * @param string $method
+     * @param string $uri
+     * @return void
+     */
     public function callRoute(string $method, string $uri): void
     {
         try {
@@ -51,6 +75,13 @@ class Router
         }
     }
 
+    /**
+     * Get controller, resolve dependency injections and call the related method
+     * @param string $controller
+     * @param string $method
+     * @param mixed $param
+     * @return void
+     */
     private function dispatchControllerFunction(string $controller, string $method, mixed $param) : void
     {
         try {

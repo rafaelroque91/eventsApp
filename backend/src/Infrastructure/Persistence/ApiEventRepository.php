@@ -12,13 +12,24 @@ use App\Repository\EventRepositoryInterface;
 
 class ApiEventRepository implements EventRepositoryInterface
 {
+    /**
+     * @var ApiClient
+     */
     private ApiClient $apiClient;
 
+    /**
+     * @param ApiClient $apiClient
+     */
     public function __construct(ApiClient $apiClient)
     {
         $this->apiClient = $apiClient;
     }
 
+    /**
+     * get events from api
+     * @param QueryParamsDTO $params
+     * @return array
+     */
     public function findAll(QueryParamsDTO $params): array
     {
         try {
@@ -29,6 +40,12 @@ class ApiEventRepository implements EventRepositoryInterface
         }
     }
 
+    /**
+     * build urls params to send to CivicPlus API
+     * @param string $url
+     * @param QueryParamsDTO $params
+     * @return string
+     */
     private function buildUrlWithParams(string $url, QueryParamsDTO $params) : string
     {
         $filters = $this->buildODataFilter($params->filters);
@@ -42,6 +59,11 @@ class ApiEventRepository implements EventRepositoryInterface
         return $url . '?' . $query;
     }
 
+    /**
+     * generate the query params using odata format (CivicPlus API)
+     * @param array|null $filters
+     * @return string|null
+     */
     private function buildODataFilter(?array $filters): ?string
     {
         if ($filters == null) {
@@ -67,6 +89,11 @@ class ApiEventRepository implements EventRepositoryInterface
         return implode(' and ', $conditions);
     }
 
+    /**
+     * find event by id
+     * @param string $id
+     * @return Event|null
+     */
     public function findById(string $id): ?Event
     {
         try {
@@ -83,6 +110,11 @@ class ApiEventRepository implements EventRepositoryInterface
         }
     }
 
+    /**
+     * save event
+     * @param Event $event
+     * @return Event
+     */
     public function save(Event $event): Event
     {
         try {

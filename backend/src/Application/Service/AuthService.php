@@ -11,6 +11,13 @@ use App\Infrastructure\Http\ApiException;
 
 class AuthService
 {
+    /**
+     * @param ClientInterface $httpClient
+     * @param TokenCacheInterface $tokenCache
+     * @param string $authUrl
+     * @param string $clientId
+     * @param string $clientSecret
+     */
     public function __construct(
         private readonly ClientInterface $httpClient,
         private readonly TokenCacheInterface $tokenCache,
@@ -20,6 +27,10 @@ class AuthService
     ) {
     }
 
+    /**
+     * get token from redis / api
+     * @return string
+     */
     public function getBearerToken(): string
     {
         $cachedToken = $this->tokenCache->getToken();
@@ -63,6 +74,10 @@ class AuthService
         }
     }
 
+    /**
+     * @param ResponseInterface $response
+     * @return array
+     */
     private function getTokenFromResponse(ResponseInterface $response): array
     {
         $body = (string) $response->getBody();

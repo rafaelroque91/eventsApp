@@ -17,6 +17,11 @@ class EventController
 {
     use RequestUtilTrait;
 
+    /**
+     * @param ListEventsHandler $listEventsHandler
+     * @param GetEventDetailsHandler $getEventDetailsHandler
+     * @param AddEventHandler $addEventHandler
+     */
     public function __construct(
         private readonly ListEventsHandler $listEventsHandler,
         private readonly GetEventDetailsHandler $getEventDetailsHandler,
@@ -24,6 +29,10 @@ class EventController
     ) {
     }
 
+    /**
+     * list Events method
+     * @return string
+     */
     public function list(): string
     {
         try {
@@ -39,6 +48,10 @@ class EventController
         }
     }
 
+    /**
+     * store Event method
+     * @return string
+     */
     public function store(): string
     {
         try {
@@ -63,6 +76,11 @@ class EventController
         }
     }
 
+    /**
+     * show an event
+     * @param string $id
+     * @return string
+     */
     public function show(string $id): string
     {
         try {

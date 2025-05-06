@@ -7,6 +7,11 @@ use App\Infrastructure\Web\Controller\EventController;
 
 class RouterFactory
 {
+    /**
+     * Add routes and identify the controller/ method
+     * @param Container $container
+     * @return Router
+     */
     public static function create(Container $container): Router
     {
         $router = new Router($container);

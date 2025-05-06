@@ -23,16 +23,34 @@ class ApiClient
         $this->authService = $authService;
     }
 
+    /**
+     * run get requests
+     * @param string $endpoint
+     * @return array
+     */
     public function get(string $endpoint): array
     {
         return $this->request('GET', $endpoint);
     }
 
+    /**
+     * run post requests
+     * @param string $endpoint
+     * @param array $data
+     * @return array
+     */
     public function post(string $endpoint, array $data): array
     {
         return $this->request('POST', $endpoint, $data);
     }
 
+    /**
+     * run requests on external api
+     * @param string $method
+     * @param string $endpoint
+     * @param array $body
+     * @return array
+     */
     private function request(string $method, string $endpoint, array $body = []): array
     {
         try {
@@ -79,6 +97,10 @@ class ApiClient
         }
     }
 
+    /**
+     * @param ResponseInterface $response
+     * @return array
+     */
     private function decodeResponse(ResponseInterface $response): array
     {
         $body = $response->getBody()->getContents();

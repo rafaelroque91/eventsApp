@@ -19,24 +19,47 @@ class Container
 
     private array $singletons = [];
 
+    /**
+     * bind interface / class
+     * @param string $id
+     * @param callable|string $concrete
+     * @return void
+     */
     public function bind(string $id, callable|string $concrete): void
     {
         $this->bindings[$id] = $concrete;
         unset($this->singletons[$id]);
     }
 
+    /**
+     * register the singleton classes
+     * @param string $id
+     * @param callable|string $concrete
+     * @return void
+     */
     public function singleton(string $id, callable|string $concrete): void
     {
         $this->bindings[$id] = $concrete;
         $this->singletons[$id] = true;
     }
 
+    /**
+     * @param string $id
+     * @param object $instance
+     * @return void
+     */
     public function instance(string $id, object $instance): void
     {
         $this->instances[$id] = $instance;
         $this->singletons[$id] = true;
     }
 
+    /** get class from container
+     * @param string $id
+     * @return mixed
+     * @throws ContainerException
+     * @throws NotFoundException
+     */
     public function get(string $id): mixed
     {
         if (isset($this->instances[$id])) {
@@ -73,11 +96,21 @@ class Container
         return $instance;
     }
 
+    /**
+     * @param string $id
+     * @return bool
+     */
     public function has(string $id): bool
     {
         return isset($this->bindings[$id]) || isset($this->instances[$id]) || class_exists($id);
     }
 
+    /**
+     * @param string $className
+     * @return object|mixed|string|null
+     * @throws ContainerException
+     * @throws \ReflectionException
+     */
     private function resolve(string $className): object
     {
         try {
@@ -112,6 +145,12 @@ class Container
         return $reflector->newInstanceArgs($dependencies);
     }
 
+    /**
+     * @param ReflectionParameter $parameter
+     * @param string $consumerClassName
+     * @return mixed
+     * @throws ContainerException
+     */
     private function resolveParameter(ReflectionParameter $parameter, string $consumerClassName): mixed
     {
         $type = $parameter->getType();

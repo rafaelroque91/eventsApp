@@ -12,6 +12,12 @@ trait RequestUtilTrait
 {
     const int OPTION_FIELD_REQUIRED = 0;
     const int OPTION_FIELD_TYPE = 1;
+
+    /**
+     * @param array $rules
+     * @param string $requestDTOInterfaceDto
+     * @return RequestDTOInterface
+     */
     public function validate(array $rules, string $requestDTOInterfaceDto) : RequestDTOInterface
     {
         $input = json_decode(file_get_contents('php://input'), true);
@@ -68,16 +74,29 @@ trait RequestUtilTrait
         return $requestDTOInterfaceDto::createFromRequestData($validated);
     }
 
+    /**
+     * @param array $params
+     * @return QueryParamsDTO
+     */
     private function getQueryParams(array $params) : QueryParamsDTO
     {
         return QueryParamsDTO::createFromRequest($params);
     }
 
+    /**
+     * @param mixed $data
+     * @return string
+     */
     private function jsonResponseCreated(mixed $data): string
     {
         return $this->jsonResponse($data, 201);
     }
 
+    /**
+     * @param mixed $data
+     * @param int $statusCode
+     * @return string
+     */
     private function jsonResponse(mixed $data, int $statusCode = 200): string
     {
         http_response_code($statusCode);
@@ -85,6 +104,10 @@ trait RequestUtilTrait
         return json_encode($data);
     }
 
+    /**
+     * @param string $message
+     * @return string
+     */
     private function jsonResponseNotFound(string $message): string
     {
         return $this->jsonResponse([
@@ -93,6 +116,10 @@ trait RequestUtilTrait
 
     }
 
+    /**
+     * @param array $errors
+     * @return string
+     */
     private function jsonInvalidRequestResponse(array $errors): string
     {
         return $this->jsonResponse([
@@ -100,6 +127,12 @@ trait RequestUtilTrait
             'errors' => $errors], 422);
     }
 
+    /**
+     * @param \Exception $e
+     * @param string|null $friendlyMessage
+     * @param int $code
+     * @return string
+     */
     private function jsonErrorResponse(\Exception $e, ?string $friendlyMessage = null, int $code = 500): string
     {
         error_log($e->getMessage() . "\n" . $e->getTraceAsString());
