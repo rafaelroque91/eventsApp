@@ -49,3 +49,8 @@ PHPStan
 ```bash
    docker compose exec php-fpm vendor/bin/phpstan analyse src
    ```
+
+PHPUnit
+```bash
+   docker compose exec php-fpm vendor/bin/phpunit
+   ```

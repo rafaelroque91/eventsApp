@@ -14,14 +14,13 @@ trait RequestUtilTrait
     const int OPTION_FIELD_TYPE = 1;
 
     /**
+     * @param mixed $input
      * @param array $rules
      * @param string $requestDTOInterfaceDto
      * @return RequestDTOInterface
      */
-    public function validate(array $rules, string $requestDTOInterfaceDto) : RequestDTOInterface
+    public function validate(mixed $input, array $rules, string $requestDTOInterfaceDto) : RequestDTOInterface
     {
-        $input = json_decode(file_get_contents('php://input'), true);
-
         if (json_last_error() !== JSON_ERROR_NONE) {
             $this->jsonInvalidRequestResponse(['request' => json_last_error_msg()]);
         }
@@ -67,9 +66,8 @@ trait RequestUtilTrait
         }
 
         if (count($errors) > 0) {
-            $this->jsonInvalidRequestResponse($errors);
+            throw new \InvalidArgumentException(json_encode($errors));
         }
-
 
         return $requestDTOInterfaceDto::createFromRequestData($validated);
     }
@@ -135,14 +133,24 @@ trait RequestUtilTrait
      */
     private function jsonErrorResponse(\Exception $e, ?string $friendlyMessage = null, int $code = 500): string
     {
+        $msg = $e->getMessage();
+        if ($this->isJson($msg)) {
+            $msg = json_decode($msg,true);
+        }
+
         error_log($e->getMessage() . "\n" . $e->getTraceAsString());
 
         return $this->jsonResponse(
             [
                 "message" => $friendlyMessage,
-                "errors" => [$e->getMessage()],
+                "errors" => [$msg],
                 "trace" => APP_DEBUG ? $e->getTraceAsString() : null,
             ],
             $code);
+    }
+
+    function isJson($string) : bool {
+        json_decode($string);
+        return json_last_error() === JSON_ERROR_NONE;
     }
 }

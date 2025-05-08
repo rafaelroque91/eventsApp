@@ -9,7 +9,7 @@ use App\Application\DTO\EventDTO;
 use App\Application\Query\GetEventDetailsHandler;
 use App\Application\Query\ListEventsHandler;
 use App\Application\Validation\RequestUtilTrait;
-use App\Domain\Entity\Event;
+use App\Application\Entity\Event;
 use App\Infrastructure\Web\Resource\EventResource;
 use Throwable;
 
@@ -55,11 +55,12 @@ class EventController
     public function store(): string
     {
         try {
-            $eventDto = $this->validate([
+            $input = json_decode(file_get_contents('php://input'), true);
+            $eventDto = $this->validate($input, [
                 'title' => ['required','string'],
                 'description' => ['optional','string'],
-                'startDate' => ['optional','date'],
-                'endDate' => ['optional','date']
+                'startDate' => ['required','date'],
+                'endDate' => ['required','date']
             ], EventDTO::class);
 
             $newEvent = $this->addEventHandler->handle(
@@ -70,7 +71,7 @@ class EventController
 
             return $this->jsonResponseCreated($responseData);
         } catch (\InvalidArgumentException $e) {
-            return $this->jsonErrorResponse($e, null,422);
+            return $this->jsonErrorResponse($e, 'validation error',422);
         } catch (\Throwable $e) {
             return $this->jsonErrorResponse($e, "Failed to save event: ");
         }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Application\DTO\QueryParamsDTO;
-use App\Domain\Entity\Event;
+use App\Application\Entity\Event;
 
 interface EventRepositoryInterface
 {

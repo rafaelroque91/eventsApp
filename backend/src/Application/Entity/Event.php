@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Entity;
+namespace App\Application\Entity;
 
 use Carbon\Carbon;
 

@@ -6,7 +6,7 @@ namespace App\Infrastructure\Persistence;
 
 use App\Application\DTO\QueryParamsDTO;
 use App\Infrastructure\Http\ApiClient;
-use App\Domain\Entity\Event;
+use App\Application\Entity\Event;
 use App\Infrastructure\Http\ApiException;
 use App\Repository\EventRepositoryInterface;
 
